@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Miner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0b0f21 0%, #1a1f3a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+            color: #00f0ff;
+            letter-spacing: 1.5px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .stat-box {
+            background: rgba(0, 240, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+        
+        .clicker-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .mineral {
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle at 30% 30%, #ffcc00, #ff9900);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5rem;
+            user-select: none;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.7),
+                        inset 0 0 20px rgba(255, 153, 0, 0.9);
+            transition: transform 0.1s;
+            margin-bottom: 20px;
+            border: 8px solid #ff9900;
+            position: relative;
+            overflow: hidden;
+            animation: pulse 3s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 204, 0, 0.7); }
+            100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 204, 0, 0.9); }
+        }
+        
+        .mineral:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+            animation: none;
+        }
+        
+        .mineral::before {
+            content: "";
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 153, 0, 0.7);
+            border-radius: 50%;
+            top: 40px;
+            left: 50px;
+            box-shadow: 
+                60px -30px 0 10px rgba(255, 153, 0, 0.6),
+                -40px 70px 0 15px rgba(255, 153, 0, 0.5),
+                90px 80px 0 5px rgba(255, 153, 0, 0.4);
+        }
+        
+        .click-value {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #00f0ff;
+        }
+        
+        .upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .upgrade {
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        
+        .upgrade:hover {
+            transform: translateY(-5px);
+            background: rgba(0, 240, 255, 0.15);
+            box-shadow: 0 5px 15px rgba(0, 240, 255, 0.2);
+        }
+        
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .upgrade-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #ffcc00;
+        }
+        
+        .upgrade-level {
+            background: rgba(0, 240, 255, 0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            color: #ffcc00;
+        }
+        
+        .upgrade-description {
+            margin-bottom: 15px;
+            color: #a0e6ff;
+            font-size: 0.95rem;
+        }
+        
+        .upgrade-cost {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #00f0ff 0%, #0088ff 100%);
+            color: #0b0f21;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .achievements {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        
+        .achievement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            background: rgba(0, 240, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        
+        .achievement-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            color: #ffcc00;
+        }
+        
+        .achievement-info {
+            flex-grow: 1;
+        }
+        
+        .achievement-title {
+            font-weight: bold;
+            color: #00f0ff;
+        }
+        
+        .achievement-desc {
+            font-size: 0.9rem;
+            color: #a0e6ff;
+        }
+        
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        
+        .save-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #00ff9d 0%, #00b36b 100%);
+        }
+        
+        .load-btn {
+            background: linear-gradient(135deg, #ff9900 0%, #ff6600 100%);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #ff3366 0%, #cc0044 100%);
+        }
+        
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            background: rgba(0, 240, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.5s;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+        
+        .save-indicator.show {
+            opacity: 1;
+        }
+        
+        @media (max-width: 600px) {
+            .stats {
+                flex-direction: column;
+            }
+            
+            .stat-box {
+                width: 100%;
+            }
+            
+            .mineral {
+                width: 180px;
+                height: 180px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .save-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="save-indicator" id="save-indicator">Game Saved!</div>
+    
+    <div class="container">
+        <header>
+            <h1>Cosmic Miner</h1>
+            <p>Mine cosmic minerals to earn credits and upgrade your equipment!</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Cosmic Credits</div>
+                <div class="stat-value" id="credits">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Credits Per Second</div>
+                <div class="stat-value" id="cps">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Credits Per Click</div>
+                <div class="stat-value" id="cpc">1</div>
+            </div>
+        </div>
+        
+        <div class="clicker-area">
+            <div class="mineral" id="mineral">⭐</div>
+            <div class="click-value" id="click-value">+1 per click</div>
+        </div>
+        
+        <h2>Equipment Upgrades</h2>
+        <div class="upgrades" id="upgrades">
+            <!-- Upgrades will be generated by JavaScript -->
+        </div>
+        
+        <div class="save-section">
+            <button class="save-btn" onclick="manualSave()">💾 Save Game</button>
+            <button class="load-btn" onclick="loadGame()">📂 Load Game</button>
+            <button class="reset-btn" onclick="resetGame()">🔄 Reset Game</button>
+        </div>
+        
+        <div class="achievements">
+            <h2>Achievements</h2>
+            <div id="achievements-list">
+                <!-- Achievements will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let credits = 0;
+        let creditsPerClick = 1;
+        let creditsPerSecond = 0;
+        let laserDrillLevel = 1;
+        let autoMinerLevel = 0;
+        let orbitalStationLevel = 0;
+        let quantumExtractorLevel = 0;
+        let neutronForgeLevel = 0;
+        let lastSaveTime = Date.now();
+        let autoSaveInterval = 30000; // Auto-save every 30 seconds
+        
+        // Upgrade costs
+        const laserDrillBaseCost = 15;
+        const autoMinerBaseCost = 50;
+        const orbitalStationBaseCost = 100;
+        const quantumExtractorBaseCost = 500;
+        const neutronForgeBaseCost = 1200;
+        
+        // Achievements
+        const achievements = [
+            { id: 1, title: "First Mineral", description: "Mine your first cosmic mineral", earned: false, check: () => credits >= 1 },
+            { id: 2, title: "Space Apprentice", description: "Earn 100 cosmic credits", earned: false, check: () => credits >= 100 },
+            { id: 3, title: "Astro Miner", description: "Earn 1,000 cosmic credits", earned: false, check: () => credits >= 1000 },
+            { id: 4, title: "Galactic Tycoon", description: "Earn 1,000,000 cosmic credits", earned: false, check: () => credits >= 1000000 },
+            { id: 5, title: "Efficient Operation", description: "Reach 10 credits per second", earned: false, check: () => creditsPerSecond >= 10 },
+            { id: 6, title: "Cosmic Enterprise", description: "Reach 100 credits per second", earned: false, check: () => creditsPerSecond >= 100 },
+        ];
+        
+        // Create stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // Show save indicator
+        function showSaveIndicator() {
+            const indicator = document.getElementById('save-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Save game function
+        function saveGame() {
+            const gameData = {
+                credits,
+                creditsPerClick,
+                creditsPerSecond,
+                laserDrillLevel,
+                autoMinerLevel,
+                orbitalStationLevel,
+                quantumExtractorLevel,
+                neutronForgeLevel,
+                achievements: achievements.map(a => a.earned),
+                saveTime: Date.now()
+            };
+            
+            localStorage.setItem('cosmicMinerSave', JSON.stringify(gameData));
+            lastSaveTime = Date.now();
+            showSaveIndicator();
+            console.log('Game saved successfully');
+        }
+        
+        // Manual save function
+        function manualSave() {
+            saveGame();
+            const indicator = document.getElementById('save-indicator');
+            indicator.textContent = "Game Saved!";
+            showSaveIndicator();
+        }
+        
+        // Load game function
+        function loadGame() {
+            const saveData = localStorage.getItem('cosmicMinerSave');
+            
+            if (saveData) {
+                try {
+                    const gameData = JSON.parse(saveData);
+                    
+                    credits = gameData.credits || 0;
+                    creditsPerClick = gameData.creditsPerClick || 1;
+                    creditsPerSecond = gameData.creditsPerSecond || 0;
+                    laserDrillLevel = gameData.laserDrillLevel || 1;
+                    autoMinerLevel = gameData.autoMinerLevel || 0;
+                    orbitalStationLevel = gameData.orbitalStationLevel || 0;
+                    quantumExtractorLevel = gameData.quantumExtractorLevel || 0;
+                    neutronForgeLevel = gameData.neutronForgeLevel || 0;
+                    
+                    // Load achievements
+                    if (gameData.achievements && gameData.achievements.length === achievements.length) {
+                        for (let i = 0; i < achievements.length; i++) {
+                            achievements[i].earned = gameData.achievements[i];
+                        }
+                    }
+                    
+                    updateUI();
+                    generateUpgrades();
+                    
+                    const indicator = document.getElementById('save-indicator');
+                    indicator.textContent = "Game Loaded!";
+                    showSaveIndicator();
+                    console.log('Game loaded successfully');
+                } catch (e) {
+                    console.error('Error loading game:', e);
+                    alert('Failed to load game. Save data may be corrupted.');
+                }
+            } else {
+                alert('No saved game found!');
+            }
+        }
+        
+        // Reset game function
+        function resetGame() {
+            if (confirm('Are you sure you want to reset your game? All progress will be lost!')) {
+                credits = 0;
+                creditsPerClick = 1;
+                creditsPerSecond = 0;
+                laserDrillLevel = 1;
+                autoMinerLevel = 0;
+                orbitalStationLevel = 0;
+                quantumExtractorLevel = 0;
+                neutronForgeLevel = 0;
+                
+                for (const achievement of achievements) {
+                    achievement.earned = false;
+                }
+                
+                localStorage.removeItem('cosmicMinerSave');
+                updateUI();
+                generateUpgrades();
+                
+                const indicator = document.getElementById('save-indicator');
+                indicator.textContent = "Game Reset!";
+                showSaveIndicator();
+                console.log('Game reset successfully');
+            }
+        }
+        
+        // Check if it's time to auto-save
+        function checkAutoSave() {
+            const currentTime = Date.now();
+            if (currentTime - lastSaveTime >= autoSaveInterval) {
+                saveGame();
+            }
+        }
+        
+        // Update the UI
+        function updateUI() {
+            document.getElementById('credits').textContent = formatNumber(credits);
+            document.getElementById('cps').textContent = formatNumber(creditsPerSecond);
+            document.getElementById('cpc').textContent = formatNumber(creditsPerClick);
+            document.getElementById('click-value').textContent = `+${formatNumber(creditsPerClick)} per click`;
+            
+            // Update upgrade buttons
+            updateUpgradeButtons();
+            
+            // Check achievements
+            checkAchievements();
+            
+            // Check if it's time to auto-save
+            checkAutoSave();
+        }
+        
+        // Format numbers with commas
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+        
+        // Handle mineral click
+        function handleMineralClick() {
+            credits += creditsPerClick;
+            updateUI();
+            
+            // Create floating text animation
+            createFloatingText(`+${formatNumber(creditsPerClick)}`);
+        }
+        
+        // Create floating text animation
+        function createFloatingText(text) {
+            const floatingText = document.createElement('div');
+            floatingText.textContent = text;
+            floatingText.style.position = 'absolute';
+            floatingText.style.color = '#ffcc00';
+            floatingText.style.fontWeight = 'bold';
+            floatingText.style.fontSize = '1.2rem';
+            floatingText.style.pointerEvents = 'none';
+            floatingText.style.userSelect = 'none';
+            floatingText.style.textShadow = '0 0 5px rgba(255, 204, 0, 0.8)';
+            floatingText.style.zIndex = '10';
+            
+            const mineralRect = document.getElementById('mineral').getBoundingClientRect();
+            const x = mineralRect.left + mineralRect.width / 2;
+            const y = mineralRect.top + mineralRect.height / 2;
+            
+            floatingText.style.left = `${x}px`;
+            floatingText.style.top = `${y}px`;
+            
+            document.body.appendChild(floatingText);
+            
+            // Animate the text
+            let opacity = 1;
+            let posY = y;
+            const animation = setInterval(() => {
+                opacity -= 0.02;
+                posY -= 2;
+                floatingText.style.opacity = opacity;
+                floatingText.style.top = `${posY}px`;
+                
+                if (opacity <= 0) {
+                    clearInterval(animation);
+                    document.body.removeChild(floatingText);
+                }
+            }, 30);
+        }
+        
+        // Calculate upgrade cost
+        function calculateUpgradeCost(baseCost, level) {
+            return Math.floor(baseCost * Math.pow(1.15, level));
+        }
+        
+        // Buy laser drill upgrade
+        function buyLaserDrill() {
+            const cost = calculateUpgradeCost(laserDrillBaseCost, laserDrillLevel);
+            if (credits >= cost) {
+                credits -= cost;
+                creditsPerClick += 1;
+                laserDrillLevel++;
+                updateUI();
+            }
+        }
+        
+        // Buy auto miner
+        function buyAutoMiner() {
+            const cost = calculateUpgradeCost(autoMinerBaseCost, autoMinerLevel);
+            if (credits >= cost) {
+                credits -= cost;
+                autoMinerLevel++;
+                creditsPerSecond += 1;
+                updateUI();
+            }
+        }
+        
+        // Buy orbital station
+        function buyOrbitalStation() {
+            const cost = calculateUpgradeCost(orbitalStationBaseCost, orbitalStationLevel);
+            if (credits >= cost) {
+                credits -= cost;
+                orbitalStationLevel++;
+                creditsPerSecond += 5;
+                updateUI();
+            }
+        }
+        
+        // Buy quantum extractor
+        function buyQuantumExtractor() {
+            const cost = calculateUpgradeCost(quantumExtractorBaseCost, quantumExtractorLevel);
+            if (credits >= cost) {
+                credits -= cost;
+                quantumExtractorLevel++;
+                creditsPerSecond += 10;
+                updateUI();
+            }
+        }
+        
+        // Buy neutron forge
+        function buyNeutronForge() {
+            const cost = calculateUpgradeCost(neutronForgeBaseCost, neutronForgeLevel);
+            if (credits >= cost) {
+                credits -= cost;
+                neutronForgeLevel++;
+                creditsPerSecond += 20;
+                updateUI();
+            }
+        }
+        
+        // Update upgrade buttons
+        function updateUpgradeButtons() {
+            const upgrades = [
+                {
+                    id: 'laser-drill',
+                    cost: calculateUpgradeCost(laserDrillBaseCost, laserDrillLevel),
+                    level: laserDrillLevel,
+                    enabled: credits >= calculateUpgradeCost(laserDrillBaseCost, laserDrillLevel)
+                },
+                {
+                    id: 'auto-miner',
+                    cost: calculateUpgradeCost(autoMinerBaseCost, autoMinerLevel),
+                    level: autoMinerLevel,
+                    enabled: credits >= calculateUpgradeCost(autoMinerBaseCost, autoMinerLevel)
+                },
+                {
+                    id: 'orbital-station',
+                    cost: calculateUpgradeCost(orbitalStationBaseCost, orbitalStationLevel),
+                    level: orbitalStationLevel,
+                    enabled: credits >= calculateUpgradeCost(orbitalStationBaseCost, orbitalStationLevel)
+                },
+                {
+                    id: 'quantum-extractor',
+                    cost: calculateUpgradeCost(quantumExtractorBaseCost, quantumExtractorLevel),
+                    level: quantumExtractorLevel,
+                    enabled: credits >= calculateUpgradeCost(quantumExtractorBaseCost, quantumExtractorLevel)
+                },
+                {
+                    id: 'neutron-forge',
+                    cost: calculateUpgradeCost(neutronForgeBaseCost, neutronForgeLevel),
+                    level: neutronForgeLevel,
+                    enabled: credits >= calculateUpgradeCost(neutronForgeBaseCost, neutronForgeLevel)
+                }
+            ];
+            
+            for (const upgrade of upgrades) {
+                const button = document.getElementById(upgrade.id);
+                if (button) {
+                    button.disabled = !upgrade.enabled;
+                    button.innerHTML = `Buy (${formatNumber(upgrade.cost)})`;
+                    
+                    const levelSpan = document.getElementById(`${upgrade.id}-level`);
+                    if (levelSpan) {
+                        levelSpan.textContent = upgrade.level;
+                    }
+                }
+            }
+        }
+        
+        // Check achievements
+        function checkAchievements() {
+            const achievementsList = document.getElementById('achievements-list');
+            let anyAchievementEarned = false;
+            
+            for (const achievement of achievements) {
+                if (!achievement.earned && achievement.check()) {
+                    achievement.earned = true;
+                    anyAchievementEarned = true;
+                }
+            }
+            
+            if (anyAchievementEarned) {
+                renderAchievements();
+            }
+        }
+        
+        // Render achievements
+        function renderAchievements() {
+            const achievementsList = document.getElementById('achievements-list');
+            achievementsList.innerHTML = '';
+            
+            for (const achievement of achievements) {
+                const achievementElement = document.createElement('div');
+                achievementElement.className = 'achievement';
+                
+                achievementElement.innerHTML = `
+                    <div class="achievement-icon">${achievement.earned ? '🚀' : '🔒'}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-title">${achievement.title}</div>
+                        <div class="achievement-desc">${achievement.description}</div>
+                    </div>
+                    <div>${achievement.earned ? 'Unlocked!' : 'Locked'}</div>
+                `;
+                
+                achievementsList.appendChild(achievementElement);
+            }
+        }
+        
+        // Generate upgrades
+        function generateUpgrades() {
+            const upgradesContainer = document.getElementById('upgrades');
+            upgradesContainer.innerHTML = '';
+            
+            const upgrades = [
+                {
+                    id: 'laser-drill',
+                    name: 'Laser Drill',
+                    description: 'Increase credits per click',
+                    level: laserDrillLevel,
+                    cost: calculateUpgradeCost(laserDrillBaseCost, laserDrillLevel),
+                    onClick: buyLaserDrill
+                },
+                {
+                    id: 'auto-miner',
+                    name: 'Auto Miner',
+                    description: 'Automatically mines 1 credit per second',
+                    level: autoMinerLevel,
+                    cost: calculateUpgradeCost(autoMinerBaseCost, autoMinerLevel),
+                    onClick: buyAutoMiner
+                },
+                {
+                    id: 'orbital-station',
+                    name: 'Orbital Station',
+                    description: 'Generates 5 credits per second',
+                    level: orbitalStationLevel,
+                    cost: calculateUpgradeCost(orbitalStationBaseCost, orbitalStationLevel),
+                    onClick: buyOrbitalStation
+                },
+                {
+                    id: 'quantum-extractor',
+                    name: 'Quantum Extractor',
+                    description: 'Generates 10 credits per second',
+                    level: quantumExtractorLevel,
+                    cost: calculateUpgradeCost(quantumExtractorBaseCost, quantumExtractorLevel),
+                    onClick: buyQuantumExtractor
+                },
+                {
+                    id: 'neutron-forge',
+                    name: 'Neutron Forge',
+                    description: 'Generates 20 credits per second',
+                    level: neutronForgeLevel,
+                    cost: calculateUpgradeCost(neutronForgeBaseCost, neutronForgeLevel),
+                    onClick: buyNeutronForge
+                }
+            ];
+            
+            for (const upgrade of upgrades) {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-header">
+                        <div class="upgrade-name">${upgrade.name}</div>
+                        <div class="upgrade-level">Level: <span id="${upgrade.id}-level">${upgrade.level}</span></div>
+                    </div>
+                    <div class="upgrade-description">${upgrade.description}</div>
+                    <div class="upgrade-cost">
+                        <button id="${upgrade.id}" onclick="${upgrade.onClick.name}()">Buy (${formatNumber(upgrade.cost)})</button>
+                    </div>
+                `;
+                
+                upgradesContainer.appendChild(upgradeElement);
+            }
+            
+            // Update the UI to set correct button states
+            updateUpgradeButtons();
+        }
+        
+        // Auto miner logic
+        setInterval(() => {
+            credits += creditsPerSecond / 10;
+            updateUI();
+        }, 100);
+        
+        // Initialize the game
+        function initGame() {
+            createStars();
+            
+            // Try to load saved game on startup
+            if (localStorage.getItem('cosmicMinerSave')) {
+                loadGame();
+            } else {
+                generateUpgrades();
+                renderAchievements();
+                updateUI();
+            }
+            
+            // Add event listener to mineral
+            document.getElementById('mineral').addEventListener('click', handleMineralClick);
+            
+            // Set up beforeunload to save when leaving
+            window.addEventListener('beforeunload', saveGame);
+            
+            // Auto-save every 30 seconds
+            setInterval(saveGame, autoSaveInterval);
+            
+            console.log('Game initialized with save system');
+        }
+        
+        // Start the game when page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
